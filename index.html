@@ -63,6 +63,13 @@ button.danger{color:var(--danger)}
 .seg.seg5 button{font-size:12.5px;padding:8px 0}
 .row4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .hint{font-size:11px;color:var(--muted);margin:-6px 0 10px}
+.note-box{background:var(--bg);border-left:3px solid var(--fin);border-radius:8px;padding:10px 12px;margin:-2px 0 10px;font-size:13px;line-height:1.6}
+.note-box .nt{white-space:pre-wrap;word-break:break-word}
+.note-box .nh{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:12px;margin-bottom:4px}
+.note-box .empty-note{color:var(--muted)}
+textarea{display:block;width:100%;margin-top:4px;background:var(--card);color:var(--text);border:1px solid var(--line);
+  border-radius:8px;padding:10px;font-size:16px;font-family:inherit;min-height:120px;resize:vertical}
+textarea:focus{outline:2px solid var(--accent);outline-offset:-2px}
 /* チップ */
 .chips{display:flex;gap:6px;overflow-x:auto;margin:-4px 0 10px;padding-bottom:2px;scrollbar-width:none}
 .chips::-webkit-scrollbar{display:none}
@@ -239,35 +246,26 @@ canvas{width:100%;height:240px;display:block;margin-top:4px}
       <div class="vgrid" id="v-list"></div>
     </div>
 
-    <!-- 指トレ（ビーストメーカー等のフィンガーボード） -->
+    <!-- 指トレ（Beastmaker アプリのワークアウト単位で記録） -->
     <div id="f-finger" hidden>
-      <div class="row2" style="grid-template-columns:2fr 1fr">
-        <label>ボード<input id="f-board" list="board-list" autocomplete="off"></label>
-        <label>手<select id="f-hands"><option>両手</option><option>片手</option></select></label>
-      </div>
-      <datalist id="board-list"><option value="Beastmaker 1000"><option value="Beastmaker 2000"></datalist>
-      <div class="row2">
-        <label>ホールド<input id="f-hold" list="hold-list" autocomplete="off" placeholder="例：20mmエッジ"></label>
-        <label>グリップ<select id="f-grip"></select></label>
-      </div>
-      <datalist id="hold-list"></datalist>
-      <div class="chips" id="f-chips"></div>
+      <label>難度（Beastmaker 1000 アプリ）<select id="f-grade"></select></label>
+      <div class="note-box" id="f-note"></div>
       <div class="prev" id="f-prev" hidden></div>
-      <div class="row4">
-        <label>加重（kg）<input id="f-w" type="number" inputmode="decimal" step="0.5" placeholder="0"></label>
-        <label>秒<input id="f-t" type="number" inputmode="numeric" min="1" value="10"></label>
-        <label>回数<input id="f-n" type="number" inputmode="numeric" min="1" value="1"></label>
-        <label>セット数<input id="f-k" type="number" inputmode="numeric" min="1" value="1"></label>
+      <div class="row3">
+        <label>ハング（秒）<input id="f-on" type="number" inputmode="numeric" min="1"></label>
+        <label>回数<input id="f-reps" type="number" inputmode="numeric" min="1"></label>
+        <label>セット数<input id="f-sets" type="number" inputmode="numeric" min="1"></label>
       </div>
-      <div class="hint">加重は自重なら空欄、補助（プーリー等）はマイナス。例：7秒×6回のリピーターは 秒=7・回数=6
-        <button type="button" class="link" id="f-open-hb" style="display:block;margin-top:2px">ハングボードタイマーを開く ›</button></div>
-      <div class="readout">1セットのぶら下がり時間：<b id="f-tut">—</b></div>
-      <div class="btns">
-        <button type="button" class="primary" id="f-add">セットを記録</button>
-        <button type="button" id="f-add-timer">記録＋タイマー</button>
+      <div class="readout">ぶら下がり合計：<b id="f-tut">—</b></div>
+      <label style="margin-bottom:6px">完遂率（%）<input id="f-rate" type="number" inputmode="numeric" min="0" max="100" value="100"></label>
+      <div class="chips in" id="f-rate-chips" style="margin:0 0 12px">
+        <button type="button" class="chip" data-frate="100">100%</button><button type="button" class="chip" data-frate="90">90%</button>
+        <button type="button" class="chip" data-frate="80">80%</button><button type="button" class="chip" data-frate="70">70%</button>
+        <button type="button" class="chip" data-frate="60">60%</button><button type="button" class="chip" data-frate="50">50%</button>
       </div>
-      <div class="cur" id="f-cur" hidden></div>
-      <label style="margin:12px 0 0">メモ（この日のこのメニュー）<input id="f-memo" placeholder="指の状態、痛みなど"></label>
+      <label>メモ<input id="f-memo" placeholder="落ちたセット、指の状態など"></label>
+      <button type="button" class="primary full" id="f-add">記録</button>
+      <button type="button" class="link" id="f-open-hb" style="display:block;margin-top:10px">ハングボードタイマーを開く ›</button>
     </div>
 
     <!-- ストレッチ -->
@@ -408,7 +406,7 @@ canvas{width:100%;height:240px;display:block;margin-top:4px}
     <div class="col">
       <button data-csv="strength">筋トレ CSV（1セット1行）</button>
       <button data-csv="boulder">ボルダリング CSV（グレード別完登数）</button>
-      <button data-csv="finger">指トレ CSV（1セット1行）</button>
+      <button data-csv="finger">指トレ CSV</button>
       <button data-csv="cardio">有酸素 CSV</button>
       <button data-csv="stretch">ストレッチ CSV</button>
     </div>
@@ -455,8 +453,8 @@ const KEY = 'wlog_v1', UI_KEY = 'wlog_ui';
 const KINDS = ['strength', 'boulder', 'finger', 'cardio', 'stretch'];
 const KIND_LABEL = { strength: '筋トレ', boulder: 'ボルダー', finger: '指トレ', cardio: '有酸素', stretch: 'ストレッチ' };
 const KIND_VAR = { strength: 'str', boulder: 'bld', finger: 'fin', cardio: 'car', stretch: 'stc' };
-const HOLDS = ['ジャグ','20mmエッジ','15mmエッジ','10mmエッジ','スローパー','3本指ポケット','2本指ポケット（前）','2本指ポケット（中）','2本指ポケット（後）'];
-const GRIPS = ['オープンハンド','ハーフクリンプ','フルクリンプ','3本ドラッグ','その他'];
+// Beastmaker 1000 アプリのワークアウト難度（易→難）
+const FGRADES = ['5A', '5B', '5C', '6A', '6A+', '6B', '6B+', '6C', '6C+', '7A', '7A+', '7B', '7B+', '7C'];
 const PARTS = ['首','肩','胸','背中','腰','股関節','お尻','ハムストリング','前もも','ふくらはぎ','前腕・指','全身'];
 const GRADES = ['10級','9級','8級','7級','6級','5級','4級','3級','2級','1級','初段','二段','三段','四段','五段'];
 const CARDIO = ['ランニング','ウォーキング','バイク','エアロバイク','水泳','ローイング','その他'];
@@ -504,18 +502,12 @@ function setsStr(sets) {
   sets.forEach(x => { const l = out[out.length - 1]; if (l && l.w === x.w && l.r === x.r) l.n++; else out.push({ ...x, n: 1 }); });
   return out.map(x => `${x.w ? x.w + 'kg' : '自重'}×${x.r}${x.n > 1 ? '×' + x.n : ''}`).join(', ');
 }
-// 指トレ集計（セット = {w:加重kg, t:秒, n:回数}）
-const tut = e => sum(e.sets, s => (s.t || 0) * (s.n || 0));
-const maxAdd = e => Math.max(...e.sets.map(s => s.w || 0));
-const fmtAdd = w => w > 0 ? `+${w}kg` : w < 0 ? `${w}kg` : '自重';
+// 指トレ集計（1件 = 1ワークアウト {grade, on:ハング秒, reps:回数, sets:セット数}）
+const tut = e => (e.on || 0) * (e.reps || 0) * (e.sets || 0);
 const fmtSec = s => { s = Math.round(s); return s >= 60 ? `${Math.floor(s / 60)}分${s % 60 ? (s % 60) + '秒' : ''}` : s + '秒'; };
-const fKey = e => [e.board, e.hold, e.grip, e.hands].join('|');
-const fLabel = e => `${e.hold}・${e.grip}${e.hands === '片手' ? '・片手' : ''}`;
-function fSetsStr(sets) {
-  const out = [];
-  sets.forEach(x => { const l = out[out.length - 1]; if (l && l.w === x.w && l.t === x.t && l.n === x.n) l.k++; else out.push({ ...x, k: 1 }); });
-  return out.map(x => `${fmtAdd(x.w)} ${x.t}秒×${x.n}${x.k > 1 ? '×' + x.k + 'set' : ''}`).join(', ');
-}
+const fGradeIdx = g => FGRADES.indexOf(g);
+const fMenuStr = e => `${e.on}秒 × ${e.reps}回 × ${e.sets}セット`;
+const fRateStr = e => e.rate == null ? '' : `完遂 ${e.rate}%`;
 
 let toastTimer;
 function toast(msg) {
@@ -546,7 +538,18 @@ function migrate(d) {
   });
   keep.forEach(e => { e.sends ||= {}; e.gym ||= ''; });
   d.boulder = keep;
-  d.v = 3;
+  // 指トレ：旧形式（ホールド・グリップ別のセット配列）→ ワークアウト単位。旧情報はメモに残す
+  d.finger = d.finger.map(e => {
+    if (!Array.isArray(e.sets)) return e;
+    const s0 = e.sets[0] || {};
+    const old = [e.hold, e.grip, e.fingers && e.fingers !== '4本' ? e.fingers : '', e.hands === '片手' ? '片手' : '']
+      .filter(Boolean).join('・');
+    const add = e.sets.some(s => s.w) ? `加重 ${e.sets.map(s => s.w || 0).join('/')}kg` : '';
+    return { id: e.id, ts: e.ts, date: e.date, grade: '', on: s0.t || 0, reps: s0.n || 1, sets: e.sets.length,
+      memo: [old && `旧記録：${old}`, add, e.memo].filter(Boolean).join('　') };
+  });
+  if (!d.fgNotes || typeof d.fgNotes !== 'object') d.fgNotes = {};
+  d.v = 4;
   return d;
 }
 function load() {
@@ -627,8 +630,8 @@ function itemHTML(k, e) {
     sub = [esc(gradesStr(e)), esc(e.memo)];
     pick = ` data-pick-b="${e.id}"`;
   } else if (k === 'finger') {
-    main = `${esc(fLabel(e))}　<span style="font-weight:400;color:var(--muted);font-size:13px">${e.sets.length}セット</span>`;
-    sub = [esc(fSetsStr(e.sets)), [`ぶら下がり ${fmtSec(tut(e))}`, esc(e.board), esc(e.memo)].filter(Boolean).join('　')];
+    main = `${e.grade ? 'Beasty ' + esc(e.grade) : '難度未設定'}${e.rate != null ? `　<span style="color:${e.rate >= 100 ? 'var(--bld)' : 'var(--fin)'}">${e.rate}%</span>` : ''}`;
+    sub = [esc(fMenuStr(e)), [`ぶら下がり ${fmtSec(tut(e))}`, esc(e.memo)].filter(Boolean).join('　')];
     pick = ` data-pick-f="${e.id}"`;
   } else if (k === 'stretch') {
     main = `ストレッチ${e.minutes != null ? '　' + e.minutes + '分' : ''}`;
@@ -901,86 +904,103 @@ $('#vw-del').onclick = async () => {
   db.videos = db.videos.filter(x => x.id !== id); save(); closeViewer(); afterChange(); toast('動画を削除しました');
 };
 
-// --- 指トレ（ビーストメーカー） ---
-$('#f-grip').innerHTML = GRIPS.map(g => `<option>${g}</option>`).join('');
-$('#f-board').value = ui.fboard ?? 'Beastmaker 1000';
-$('#f-hold').value = ui.fhold || '20mmエッジ';
-$('#f-grip').value = GRIPS.includes(ui.fgrip) ? ui.fgrip : 'ハーフクリンプ';
-$('#f-hands').value = ui.fhands === '片手' ? '片手' : '両手';
-const fCur = () => ({ board: $('#f-board').value.trim(), hold: $('#f-hold').value.trim(), grip: $('#f-grip').value, hands: $('#f-hands').value });
-const findFin = (date, c) => db.finger.find(x => x.date === date && fKey(x) === fKey(c));
+// --- 指トレ（Beastmaker 1000 アプリのワークアウト単位） ---
+$('#f-grade').innerHTML = '<option value="">（難度なし・カスタム）</option>' + FGRADES.map(g => `<option>${g}</option>`).join('');
+$('#f-grade').value = FGRADES.includes(ui.fgrade) ? ui.fgrade : '';
+$('#f-on').value = ui.fon || 7; $('#f-reps').value = ui.freps || 6; $('#f-sets').value = ui.fsets || '';
+let fNoteEditing = false;
+const lastOfGrade = g => [...db.finger].filter(x => x.grade === g)
+  .sort((a, b) => a.date !== b.date ? (a.date < b.date ? 1 : -1) : b.ts - a.ts)[0];
+{ // 起動時も、選択中の難度の前回値を入れておく
+  const l = $('#f-grade').value && lastOfGrade($('#f-grade').value);
+  if (l) { $('#f-on').value = l.on; $('#f-reps').value = l.reps; $('#f-sets').value = l.sets; }
+}
 function renderFinger() {
-  const c = fCur(), key = fKey(c), d = recDate();
-  const usedH = recentValues('finger', 'hold');
-  $('#hold-list').innerHTML = [...usedH, ...HOLDS.filter(h => !usedH.includes(h))].map(h => `<option value="${esc(h)}">`).join('');
-  // 最近のメニュー（ボード・ホールド・グリップ・手の組合せ）
-  const seen = new Set(), combos = [];
-  [...db.finger].sort((a, b) => b.ts - a.ts).forEach(e => { const k = fKey(e); if (!seen.has(k)) { seen.add(k); combos.push(e); } });
-  const done = new Set(db.finger.filter(x => x.date === d).map(fKey));
-  $('#f-chips').hidden = !combos.length;
-  $('#f-chips').innerHTML = combos.slice(0, 10).map(e => { const k = fKey(e);
-    return `<button type="button" class="chip${k === key ? ' on' : done.has(k) ? ' done' : ''}" data-fcombo="${esc(k)}">${done.has(k) ? '✓ ' : ''}${esc(fLabel(e))}</button>`; }).join('');
+  const g = $('#f-grade').value, box = $('#f-note');
+  // 難度ごとの内容メモ（注釈）
+  if (!g) {
+    box.innerHTML = '<span class="empty-note">難度を選ぶと、その難度の内容メモ（各セットのグリップなど）が表示されます。</span>';
+  } else if (fNoteEditing) {
+    box.innerHTML = `<div class="nh"><span>Beasty ${esc(g)} の内容メモ</span></div>
+      <textarea id="f-note-text" placeholder="例：&#10;1. 深4本ポケット・ハーフクリンプ&#10;2. 中3本ポケット・オープン（前3本）&#10;3. …">${esc(db.fgNotes[g] || '')}</textarea>
+      <div class="btns" style="margin-top:8px"><button type="button" class="primary" data-fnote="save">保存</button><button type="button" data-fnote="cancel">キャンセル</button></div>`;
+  } else {
+    const t = db.fgNotes[g];
+    box.innerHTML = `<div class="nh"><span>Beasty ${esc(g)} の内容</span><button type="button" class="link" data-fnote="edit">${t ? '編集' : '登録する'}</button></div>` +
+      (t ? `<div class="nt">${esc(t)}</div>` : '<span class="empty-note">未登録です。アプリの画面を見ながら各セットのグリップを書いておくと、次回からここに表示されます。</span>');
+  }
   // 前回
-  const box = $('#f-prev'), same = db.finger.filter(x => fKey(x) === key), before = same.filter(x => x.date < d);
-  if (!c.hold) box.hidden = true;
-  else if (!before.length) { box.hidden = false; box.innerHTML = same.length ? '本日が初回です' : 'このメニューは初めてです'; }
+  const prev = $('#f-prev'), last = lastOfGrade(g), count = db.finger.filter(x => x.grade === g).length;
+  if (!g) prev.hidden = true;
   else {
-    const ld = before.reduce((m, x) => x.date > m ? x.date : m, '');
-    const sets = before.filter(x => x.date === ld).flatMap(x => x.sets);
-    box.hidden = false;
-    box.innerHTML = `前回 ${fmtDate(ld)}（タップで入力）<div class="chips in">` +
-      sets.map(s => `<button type="button" class="chip" data-ffill="${s.w}|${s.t}|${s.n}">${esc(fmtAdd(s.w))} ${s.t}秒×${s.n}</button>`).join('') +
-      `</div>最大加重 <b>${esc(fmtAdd(Math.max(...same.map(maxAdd))))}</b>`;
+    prev.hidden = false;
+    const rated = db.finger.filter(x => x.grade === g && x.rate != null);
+    const bestRate = rated.length ? Math.max(...rated.map(x => x.rate)) : null;
+    prev.innerHTML = last
+      ? `前回 ${fmtDate(last.date)}　<b>${esc(fMenuStr(last))}</b>${last.rate != null ? `　<b>${last.rate}%</b>` : ''}<br>` +
+        `通算${count}回${bestRate != null ? `・最高完遂率 <b>${bestRate}%</b>` : ''}`
+      : 'この難度は初めてです';
   }
-  // この日のセット
-  const e = findFin(d, c), cur = $('#f-cur');
-  if (e) $('#f-memo').value = e.memo || '';
-  if (!e) cur.hidden = true;
-  else {
-    cur.hidden = false;
-    cur.innerHTML = `<div class="cur-h"><span><b>${esc(fLabel(e))}</b>　${e.sets.length}セット</span><span>計 <b>${fmtSec(tut(e))}</b></span></div>
-      <ol class="sets">${e.sets.map((s, i) => `<li><span class="no">${i + 1}</span>
-        <span class="sv">${esc(fmtAdd(s.w))}　${s.t}秒 × ${s.n}回</span>
-        <button class="x" data-del-fset="${i}" aria-label="このセットを削除">×</button></li>`).join('')}</ol>`;
-  }
-  updateFinTut();
+  updateFinTut(); updateRateChips();
 }
-function updateFinTut() {
-  const t = num($('#f-t').value), n = parseInt($('#f-n').value) || 1;
-  $('#f-tut').textContent = t ? fmtSec(t * n) : '—';
+function updateRateChips() {
+  const v = $('#f-rate').value;
+  $$('#f-rate-chips .chip').forEach(b => b.classList.toggle('on', b.dataset.frate === v));
 }
-['#f-board', '#f-hold'].forEach(s => $(s).addEventListener('input', () => { if (!findFin(recDate(), fCur())) $('#f-memo').value = ''; renderFinger(); }));
-['#f-grip', '#f-hands'].forEach(s => $(s).addEventListener('change', () => { if (!findFin(recDate(), fCur())) $('#f-memo').value = ''; renderFinger(); }));
-['#f-t', '#f-n'].forEach(s => $(s).addEventListener('input', updateFinTut));
-$('#f-memo').addEventListener('change', () => {
-  const e = findFin(recDate(), fCur());
-  if (e) { e.memo = $('#f-memo').value.trim(); save(); renderDay(); }
+$('#f-rate').addEventListener('input', updateRateChips);
+$('#f-rate-chips').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-frate]'); if (!b) return;
+  $('#f-rate').value = b.dataset.frate; updateRateChips();
 });
-function setFinCombo(e) {
-  $('#f-board').value = e.board; $('#f-hold').value = e.hold; $('#f-grip').value = e.grip; $('#f-hands').value = e.hands;
-  const last = findFin(recDate(), e) || [...db.finger].filter(x => fKey(x) === fKey(e)).sort((a, b) => b.ts - a.ts)[0];
-  if (last && last.sets.length) { const s = last.sets[last.sets.length - 1]; $('#f-w').value = s.w || ''; $('#f-t').value = s.t; $('#f-n').value = s.n; }
-  if (!findFin(recDate(), e)) $('#f-memo').value = '';
+function updateFinTut() {
+  const e = { on: num($('#f-on').value), reps: parseInt($('#f-reps').value), sets: parseInt($('#f-sets').value) };
+  $('#f-tut').textContent = e.on && e.reps && e.sets ? fmtSec(tut(e)) : '—';
+}
+// 難度を選んだら、その難度の前回の秒数・回数・セット数を入れる
+$('#f-grade').addEventListener('change', () => {
+  fNoteEditing = false;
+  const last = lastOfGrade($('#f-grade').value);
+  if (last) { $('#f-on').value = last.on; $('#f-reps').value = last.reps; $('#f-sets').value = last.sets; }
   renderFinger();
+});
+['#f-on', '#f-reps', '#f-sets'].forEach(s => $(s).addEventListener('input', updateFinTut));
+$('#f-note').addEventListener('click', ev => {
+  const act = ev.target.dataset && ev.target.dataset.fnote; if (!act) return;
+  const g = $('#f-grade').value;
+  if (act === 'save') {
+    const t = $('#f-note-text').value.trim();
+    if (t) db.fgNotes[g] = t; else delete db.fgNotes[g];
+    save(); toast('内容メモを保存しました');
+  }
+  fNoteEditing = act === 'edit';
+  renderFinger();
+  if (fNoteEditing) $('#f-note-text').focus();
+});
+function setFinFrom(e) {
+  $('#f-grade').value = FGRADES.includes(e.grade) ? e.grade : '';
+  $('#f-on').value = e.on; $('#f-reps').value = e.reps; $('#f-sets').value = e.sets;
+  if (e.rate != null) $('#f-rate').value = e.rate;
+  fNoteEditing = false; renderFinger();
 }
-function recordFinger(withTimer) {
-  const c = fCur(), w = num($('#f-w').value) || 0, t = num($('#f-t').value), n = Math.max(1, parseInt($('#f-n').value) || 1),
-    k = Math.max(1, parseInt($('#f-k').value) || 1);
-  if (!c.hold || !t) { toast('ホールドと秒数を入力してください'); return; }
-  const same = db.finger.filter(x => fKey(x) === fKey(c)), prevBest = same.length ? Math.max(...same.map(maxAdd)) : null;
-  const date = recDate();
-  let e = findFin(date, c);
-  if (!e) { e = { id: uid(), ts: Date.now(), date, ...c, sets: [], memo: '' }; db.finger.push(e); }
-  for (let i = 0; i < k; i++) e.sets.push({ w, t, n });
-  const memo = $('#f-memo').value.trim(); if (memo) e.memo = memo;
-  save(); $('#f-k').value = 1;
-  Object.assign(ui, { fboard: c.board, fhold: c.hold, fgrip: c.grip, fhands: c.hands }); saveUI();
-  toast(prevBest !== null && w > prevBest ? `最大加重 更新！ ${fmtAdd(w)}` : `${fLabel(e)} ${k > 1 ? k + 'セット' : e.sets.length + 'セット目'}を記録`);
+function recordFinger() {
+  const g = $('#f-grade').value, on = num($('#f-on').value), reps = parseInt($('#f-reps').value), sets = parseInt($('#f-sets').value);
+  if (!on || !reps || !sets) { toast('ハング秒数・回数・セット数を入力してください'); return; }
+  const rateIn = num($('#f-rate').value);
+  if (rateIn == null || rateIn < 0 || rateIn > 100) { toast('完遂率は0〜100%で入力してください'); return; }
+  const rate = Math.round(rateIn);
+  // 「完遂した最高難度」＝完遂率100%の記録の中で最も難しいもの
+  const bestDone = Math.max(-1, ...db.finger.filter(x => x.rate >= 100).map(x => fGradeIdx(x.grade)));
+  const sameRates = db.finger.filter(x => x.grade === g && g && x.rate != null).map(x => x.rate);
+  const e = { id: uid(), ts: Date.now(), date: recDate(), grade: g, on, reps, sets, rate, memo: $('#f-memo').value.trim() };
+  db.finger.push(e); save();
+  Object.assign(ui, { fgrade: g, fon: on, freps: reps, fsets: sets }); saveUI();
+  $('#f-memo').value = ''; $('#f-rate').value = 100;
+  toast(g && rate >= 100 && fGradeIdx(g) > bestDone ? `完遂の最高難度 更新！ Beasty ${g}`
+    : g && sameRates.length && rate > Math.max(...sameRates) ? `${g} の完遂率 自己ベスト！ ${rate}%`
+    : `${g ? 'Beasty ' + g : '指トレ'} ${rate}% を記録`);
   afterChange();
-  if (withTimer) { tReset(); tStart(); }
 }
-$('#f-add').onclick = () => recordFinger(false);
-$('#f-add-timer').onclick = () => recordFinger(true);
+$('#f-add').onclick = recordFinger;
 
 // --- ストレッチ ---
 const savedParts = Array.isArray(ui.parts) ? ui.parts : [];
@@ -1022,17 +1042,9 @@ document.addEventListener('click', e => {
   const ds = t.dataset;
   if (ds.ex) selectExercise(ds.ex);
   else if (ds.part) t.classList.toggle('on');
-  else if (ds.fcombo) { const [board, hold, grip, hands] = ds.fcombo.split('|'); setFinCombo({ board, hold, grip, hands }); }
-  else if (ds.ffill) { const [w, s, n] = ds.ffill.split('|'); $('#f-w').value = +w || ''; $('#f-t').value = s; $('#f-n').value = n; updateFinTut(); }
-  else if (ds.delFset !== undefined) {
-    const en = findFin(recDate(), fCur()); if (!en) return;
-    en.sets.splice(+ds.delFset, 1);
-    if (!en.sets.length) db.finger = db.finger.filter(x => x !== en);
-    save(); afterChange(); toast('セットを削除しました');
-  }
   else if (ds.pickF) {
     const en = db.finger.find(x => x.id === ds.pickF); if (!en) return;
-    goRecord(en.date, 'finger'); setFinCombo(en);
+    goRecord(en.date, 'finger'); setFinFrom(en);
   }
   else if (ds.fill) { const [w, r] = ds.fill.split('|'); $('#s-w').value = +w || ''; $('#s-r').value = r; updateRM(); }
   else if (ds.delSet !== undefined) {
@@ -1116,7 +1128,7 @@ function renderCal() {
 let gKind = 'strength';
 const METRICS = {
   boulder: [['grade', '最高完登グレード'], ['count', '完登本数']],
-  finger: [['w', '最大加重（kg）'], ['tut', 'ぶら下がり時間（秒）']],
+  finger: [['grade', '難度＋完遂率'], ['rate', '完遂率（%）'], ['tut', 'ぶら下がり時間（秒）']],
   cardio: [['km', '距離（km）'], ['min', '時間（分）']]
 };
 $$('#g-kind button').forEach(b => b.onclick = () => { gKind = b.dataset.kind; renderGraph(); });
@@ -1197,17 +1209,41 @@ function renderGraph() {
       stats = [['最高完登', GRADES[top]], ['完登数', total + '本'], ['セッション', dates.length + '回'], ['1回平均', r1(total / dates.length) + '本']];
     }
   } else if (gKind === 'finger') {
-    $('#g-sub-label').textContent = 'メニュー';
-    const seen = new Set(), combos = [];
-    [...db.finger].sort((a, b) => b.ts - a.ts).forEach(e => { const k = fKey(e); if (!seen.has(k)) { seen.add(k); combos.push([k, fLabel(e) + (e.board ? `（${e.board}）` : '')]); } });
-    fillSelect(sub, combos);
-    const rows = db.finger.filter(x => fKey(x) === sub.value && x.date >= from);
+    $('#g-sub-label').textContent = '難度';
+    const used = FGRADES.filter(g => db.finger.some(x => x.grade === g));
+    fillSelect(sub, [['', 'すべて'], ...used]);
+    const rows = db.finger.filter(x => x.date >= from && (!sub.value || x.grade === sub.value));
     const by = groupBy(rows, x => x.date), dates = Object.keys(by).sort();
-    series = met.value === 'tut'
-      ? [{ name: 'ぶら下がり時間（秒）', color: COLOR.fin, data: dates.map(d => ({ d, v: sum(by[d], tut) })) }]
-      : [{ name: '最大加重（kg）', color: COLOR.fin, data: dates.map(d => ({ d, v: Math.max(...by[d].map(maxAdd)) })) }];
-    if (rows.length) stats = [['最大加重', fmtAdd(Math.max(...rows.map(maxAdd)))], ['ぶら下がり合計', fmtSec(sum(rows, tut))],
-      ['実施日数', dates.length + '日'], ['セット数', sum(rows, x => x.sets.length) + 'セット']];
+    const rated = rows.filter(x => x.rate != null);
+    if (met.value === 'tut') {
+      series = [{ name: 'ぶら下がり時間（秒）', color: COLOR.fin, data: dates.map(d => ({ d, v: sum(by[d], tut) })) }];
+    } else if (met.value === 'rate') {
+      // 1日に複数あれば平均。難度で絞り込むと、その難度の完遂率の伸びが見える
+      const rd = dates.filter(d => by[d].some(x => x.rate != null));
+      series = [{ name: sub.value ? `Beasty ${sub.value} の完遂率` : '完遂率（全難度）', color: COLOR.fin, data: rd.map(d => {
+        const rs = by[d].filter(x => x.rate != null).map(x => x.rate), v = Math.round(sum(rs, x => x) / rs.length);
+        return { d, v, hollow: v < 100 };
+      }) }];
+      opt = { fixed: [0, 100], fmt: v => v + '%' };
+    } else {
+      // その日いちばん難しいワークアウトの難度。点の横に完遂率、100%は塗りつぶし・未満は白抜き
+      const gd = dates.filter(d => by[d].some(x => fGradeIdx(x.grade) >= 0));
+      series = [{ name: '難度（●完遂 ○途中まで・数字は完遂率）', color: COLOR.fin, data: gd.map(d => {
+        const top = Math.max(...by[d].map(x => fGradeIdx(x.grade)));
+        const rs = by[d].filter(x => fGradeIdx(x.grade) === top && x.rate != null).map(x => x.rate);
+        const rate = rs.length ? Math.max(...rs) : null;
+        return { d, v: top, label: rate != null ? rate + '%' : '', hollow: rate != null && rate < 100 };
+      }) }];
+      opt = { int: true, min: 0, max: FGRADES.length - 1, fmt: v => FGRADES[v] || '' };
+    }
+    if (rows.length) {
+      const doneTop = Math.max(-1, ...rows.filter(x => x.rate >= 100).map(x => fGradeIdx(x.grade)));
+      const avg = rated.length ? Math.round(sum(rated, x => x.rate) / rated.length) : null;
+      stats = [['完遂した最高難度', doneTop >= 0 ? 'Beasty ' + FGRADES[doneTop] : '—'],
+        ['平均完遂率', avg != null ? avg + '%' : '—'],
+        ['完遂（100%）', rated.filter(x => x.rate >= 100).length + '回 / ' + rows.length + '回'],
+        ['ぶら下がり合計', fmtSec(sum(rows, tut))]];
+    }
   } else if (gKind === 'stretch') {
     const b = buckets('W', from, db.stretch, x => x.minutes);
     bars = { data: b, color: COLOR.stc, name: '週間ストレッチ時間（分）' };
@@ -1274,7 +1310,10 @@ function drawChart(cv, series, opt) {
   let t0 = Math.min(...ts), t1 = Math.max(...ts);
   if (t0 === t1) { t0 -= 3 * 864e5; t1 += 3 * 864e5; }
   let lo = Math.min(...pts.map(p => p.v)), hi = Math.max(...pts.map(p => p.v)), ticks = [];
-  if (opt.int) {
+  if (opt.fixed) {
+    [lo, hi] = opt.fixed;
+    for (let v = lo; v <= hi; v += (hi - lo) / 4) ticks.push(v);
+  } else if (opt.int) {
     lo = Math.max(opt.min, lo - 1); hi = Math.min(opt.max, hi + 1);
     if (lo === hi) hi = lo + 1;
     const st = Math.max(1, Math.ceil((hi - lo) / 5));
@@ -1300,7 +1339,18 @@ function drawChart(cv, series, opt) {
     const d = [...s.data].sort((a, b) => a.d < b.d ? -1 : 1);
     c.strokeStyle = s.color; c.fillStyle = s.color; c.lineWidth = 2; c.lineJoin = 'round';
     c.beginPath(); d.forEach((p, i) => { const x = X(Date.parse(p.d)), y = Y(p.v); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.stroke();
-    if (d.length <= 60) d.forEach(p => { c.beginPath(); c.arc(X(Date.parse(p.d)), Y(p.v), 3, 0, Math.PI * 2); c.fill(); });
+    const card = getComputedStyle(document.documentElement).getPropertyValue('--card').trim();
+    const showLabels = d.length <= 20;
+    if (d.length <= 60) d.forEach(p => {
+      const x = X(Date.parse(p.d)), y = Y(p.v);
+      c.beginPath(); c.arc(x, y, p.hollow ? 4 : 3.5, 0, Math.PI * 2);
+      if (p.hollow) { c.fillStyle = card; c.fill(); c.lineWidth = 2; c.stroke(); c.fillStyle = s.color; }
+      else c.fill();
+      if (showLabels && p.label) {
+        c.font = '10px -apple-system,"Hiragino Sans",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'bottom';
+        c.fillText(p.label, x, y - 6);
+      }
+    });
   });
 }
 function drawBars(cv, data, color) {
@@ -1524,8 +1574,8 @@ $$('[data-hbp]').forEach(b => b.onclick = () => {
 $('#hb-log').onclick = () => {
   const c = hbCfg();
   goRecord(today(), 'finger');
-  $('#f-t').value = c.on; $('#f-n').value = c.reps; $('#f-k').value = c.sets; updateFinTut();
-  toast('ホールド・加重を確認して「セットを記録」を押してください');
+  $('#f-on').value = c.on; $('#f-reps').value = c.reps; $('#f-sets').value = c.sets; renderFinger();
+  toast('難度を確認して「記録」を押してください');
 };
 function setTimerMode(m) {
   ui.tmode = m; saveUI();
@@ -1548,8 +1598,8 @@ const CSV_DEF = {
     rows: e => gradeSort(Object.keys(e.sends)).map((g, i) => [e.date, e.gym, g, GRADES.indexOf(g) + 1, e.sends[g], i ? '' : e.memo])
   },
   finger: {
-    head: ['日付', 'ボード', 'ホールド', 'グリップ', '手', 'セット', '加重(kg)', '秒', '回数', 'ぶら下がり時間(秒)', 'メモ'],
-    rows: e => e.sets.map((s, i) => [e.date, e.board, e.hold, e.grip, e.hands, i + 1, s.w, s.t, s.n, s.t * s.n, i ? '' : e.memo])
+    head: ['日付', '難度', '難度番号', 'ハング(秒)', '回数', 'セット数', '完遂率(%)', 'ぶら下がり時間(秒)', 'メモ'],
+    rows: e => [[e.date, e.grade, fGradeIdx(e.grade) + 1 || '', e.on, e.reps, e.sets, e.rate ?? '', tut(e), e.memo]]
   },
   stretch: {
     head: ['日付', '部位', '時間(分)', 'メモ'],
@@ -1579,7 +1629,7 @@ async function renderData() {
   $('#d-counts').innerHTML =
     stat('筋トレ', `${db.strength.length}種目`, `<div class="s">${sum(db.strength, e => e.sets.length)}セット</div>`) +
     stat('ボルダリング', `${db.boulder.length}回`, `<div class="s">完登 ${sum(db.boulder, sendCount)}本</div>`) +
-    stat('指トレ', `${new Set(db.finger.map(e => e.date)).size}日`, `<div class="s">${sum(db.finger, e => e.sets.length)}セット</div>`) +
+    stat('指トレ', `${db.finger.length}回`, `<div class="s">ぶら下がり ${fmtSec(sum(db.finger, tut))}</div>`) +
     stat('ストレッチ', `${db.stretch.length}回`, `<div class="s">${Math.round(sum(db.stretch, e => e.minutes))}分</div>`) +
     stat('有酸素', `${db.cardio.length}回`) +
     stat('動画', `${db.videos.length}本`, `<div class="s">${Math.round(sum(db.videos, v => v.size) / 1048576)}MB</div>`);
@@ -1597,9 +1647,9 @@ $$('[data-csv]').forEach(b => b.onclick = () => {
   saveFile(`training_${k}_${today().replace(/-/g, '')}.csv`, text, 'text/csv');
 });
 $('#d-backup').onclick = async () => {
-  const data = { v: 3 };
+  const data = { v: 4, fgNotes: db.fgNotes };
   KINDS.forEach(k => data[k] = db[k]);
-  const text = JSON.stringify({ app: 'training-log', version: 3, exported: new Date().toISOString(), data });
+  const text = JSON.stringify({ app: 'training-log', version: 4, exported: new Date().toISOString(), data });
   if (await saveFile(`training_backup_${today().replace(/-/g, '')}.json`, text, 'application/json')) {
     ui.lastBackup = today(); saveUI(); renderData();
   }
@@ -1616,6 +1666,7 @@ $('#d-restore').onchange = async e => {
       const ids = new Set(db[k].map(x => x.id));
       d[k].forEach(x => { if (x && x.id && x.date && !ids.has(x.id)) { db[k].push(x); n++; } });
     });
+    Object.entries(d.fgNotes).forEach(([g, t]) => { if (!db.fgNotes[g]) db.fgNotes[g] = t; }); // 内容メモは未登録の難度だけ補う
     save(); afterChange(); renderData(); toast(`${n}件を復元しました`);
   } catch (err) { alert('バックアップファイルを読み込めませんでした。'); }
 };
